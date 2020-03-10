@@ -72,17 +72,21 @@ def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octS
     guiClass.activeDocument().hide("SketchRoof")
     guiClass.activeDocument().hide("Pocket")
 
-def minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, width, height, roofHeight, roofFactor=2, windowType=''):
+def minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, width, height, roofHeight, sides, roofFactor=2, windowType=''):
     octLongInSide = width
-    octSide = octLongInSide/3**(1/2)
+    octSide = octLongInSide/3**(1/2) if sides == 6 else octLongInSide/(2**(1/2)+1)
     minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octSide, octLongInSide, height, roofHeight, roofFactor, winType=windowType)
 
+    rotation = 360 / sides
     activeDoc = appClass.ActiveDocument
     draftClass.clone(activeDoc.Body)
-    draftClass.rotate([activeDoc.Clone],60.0,appClass.Vector(0,0,0),axis=appClass.Vector(0.0,0.0,1.0),copy=False)
+    draftClass.rotate([activeDoc.Clone],rotation,appClass.Vector(0,0,0),axis=appClass.Vector(0.0,0.0,1.0),copy=False)
     draftClass.clone(activeDoc.Body)
-    draftClass.rotate([activeDoc.Clone001],120.0,appClass.Vector(0,0,0),axis=appClass.Vector(0.0,0.0,1.0),copy=False)
-
+    draftClass.rotate([activeDoc.Clone001],2*rotation,appClass.Vector(0,0,0),axis=appClass.Vector(0.0,0.0,1.0),copy=False)
+    if sides == 8:
+        draftClass.clone(activeDoc.Body)
+        draftClass.rotate([activeDoc.Clone002],3*rotation,appClass.Vector(0,0,0),axis=appClass.Vector(0.0,0.0,1.0),copy=False)
+    
     activeDoc.addObject("Part::MultiFuse","Fusion")
     activeDoc.Fusion.Shapes = [appClass.activeDocument().Body,appClass.activeDocument().Clone,]
     guiClass.activeDocument().Body.Visibility=False
@@ -97,15 +101,29 @@ def minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, wid
     guiClass.ActiveDocument.Fusion001.ShapeColor=guiClass.ActiveDocument.Clone001.ShapeColor
     guiClass.ActiveDocument.Fusion001.DisplayMode=guiClass.ActiveDocument.Clone001.DisplayMode
     activeDoc.recompute()
-    activeDoc.addObject('Part::Feature','Fusion001').Shape=appClass.ActiveDocument.Fusion001.Shape.removeSplitter()
-    activeDoc.ActiveObject.Label=appClass.ActiveDocument.Fusion001.Label
-    guiClass.ActiveDocument.Fusion001.hide()
+    thisShape = 'Fusion001'
+    if sides == 8:
+        activeDoc.addObject("Part::MultiFuse","Fusion002")
+        activeDoc.Fusion002.Shapes = [appClass.activeDocument().Clone002,appClass.activeDocument().Fusion001,]
+        guiClass.activeDocument().Clone002.Visibility=False
+        guiClass.activeDocument().Fusion001.Visibility=False
+        guiClass.ActiveDocument.Fusion002.ShapeColor=guiClass.ActiveDocument.Clone002.ShapeColor
+        guiClass.ActiveDocument.Fusion002.DisplayMode=guiClass.ActiveDocument.Clone002.DisplayMode
+        activeDoc.recompute()
+        thisShape = 'Fusion002'
+    activeDoc.addObject('Part::Feature',thisShape).Shape=eval("appClass.ActiveDocument."+thisShape).Shape.removeSplitter()
+    activeDoc.ActiveObject.Label=eval("appClass.ActiveDocument."+thisShape).Label
+    eval("guiClass.ActiveDocument."+thisShape).hide()
 
-    guiClass.ActiveDocument.ActiveObject.ShapeColor=guiClass.ActiveDocument.Fusion001.ShapeColor
-    guiClass.ActiveDocument.ActiveObject.LineColor=guiClass.ActiveDocument.Fusion001.LineColor
-    guiClass.ActiveDocument.ActiveObject.PointColor=guiClass.ActiveDocument.Fusion001.PointColor
+    guiClass.ActiveDocument.ActiveObject.ShapeColor=eval("guiClass.ActiveDocument."+thisShape).ShapeColor
+    guiClass.ActiveDocument.ActiveObject.LineColor=eval("guiClass.ActiveDocument."+thisShape).LineColor
+    guiClass.ActiveDocument.ActiveObject.PointColor=eval("guiClass.ActiveDocument."+thisShape).PointColor
     appClass.ActiveDocument.recompute()
-
+    
+    if sides == 8:
+        activeDoc.removeObject("Fusion002")
+        activeDoc.removeObject("Clone002")
+        activeDoc.recompute()
     activeDoc.removeObject("Fusion001")
     activeDoc.recompute()
     activeDoc.removeObject("Clone001")
