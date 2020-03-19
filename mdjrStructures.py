@@ -33,7 +33,8 @@ def mdjrMinarete(appClass, guiClass, draftClass, partClass, sketcherClass, sides
         draftClass.move([appClass.ActiveDocument.Objects[-1]],appClass.Vector(coords[0],coords[1],coords[2]+height),copy=False)
         height += levelHeight*3/5
         
-    minareteRotate(*classes, newBound,  levelHeight*3/5, levelHeight*3/5, sides, roofFactor=10, windowType='pointed')
+    domeOrSpire = random.choice([[levelHeight*2/5,'round'],[levelHeight*3/5,'']])
+    minareteRotate(*classes, newBound,  levelHeight*3/5, domeOrSpire[0], sides, roofFactor=10, windowType='pointed', roofType=domeOrSpire[1], roundSteps=18)
     draftClass.move([appClass.ActiveDocument.Objects[-1]],appClass.Vector(coords[0],coords[1],coords[2]+height),copy=False)
     height += levelHeight*3/5
 

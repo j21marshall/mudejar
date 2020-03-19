@@ -5,7 +5,7 @@ import numpy as np
 import mudejar_classes
 from mudejar_classes import *
 
-def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octSide, octSlice, height, roofHeight, roofFactor, winType):
+def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octSide, octSlice, height, roofHeight, roofFactor, winType, roofType='', roundSteps=2):
     guiClass.activateWorkbench("DraftWorkbench")
     appClass.activeDocument().addObject('PartDesign::Body','Body')
 
@@ -13,9 +13,19 @@ def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octS
     appClass.activeDocument().Sketch.Support = (appClass.activeDocument().XZ_Plane, [''])
     appClass.activeDocument().Sketch.MapMode = 'FlatFace'
     appClass.ActiveDocument.recompute()
-
-    sketchPolygon(appClass,partClass,sketcherClass,"Sketch",0,(-octSlice/2,0),(-octSlice/2,height),(-octSlice/2/roofFactor,height+roofHeight),(octSlice/2/roofFactor,height+roofHeight),(octSlice/2,height),(octSlice/2,0))
-    sketchPolygon(appClass,partClass,sketcherClass,"Sketch",6,(-(octSlice/2-4),4),(-(octSlice/2-4),height-4),(octSlice/2-4,height-4),(octSlice/2-4,4))
+    
+    if roofType == 'round':
+        stepUp = []
+        stepDown = []
+        for i in range(1,roundSteps):
+            stepUp.append((-(octSlice/2+octSlice/2*(1/roofFactor-1)*i/roundSteps),height+roofHeight*(1**2-(i/roundSteps-1)**2)**(1/2)))
+            stepDown.append((octSlice/2+octSlice/2*(1/roofFactor-1)*(1-i/roundSteps),height+roofHeight*(1**2-(i/roundSteps)**2)**(1/2)))
+        sketchPolygon(appClass,partClass,sketcherClass,"Sketch",0,(-octSlice/2,0),(-octSlice/2,height),*stepUp,(-octSlice/2/roofFactor,height+roofHeight),(octSlice/2/roofFactor,height+roofHeight),*stepDown,(octSlice/2,height),(octSlice/2,0))
+        m = 2*(roundSteps-1)+6
+    else:
+        sketchPolygon(appClass,partClass,sketcherClass,"Sketch",0,(-octSlice/2,0),(-octSlice/2,height),(-octSlice/2/roofFactor,height+roofHeight),(octSlice/2/roofFactor,height+roofHeight),(octSlice/2,height),(octSlice/2,0))
+        m = 6
+    sketchPolygon(appClass,partClass,sketcherClass,"Sketch",m,(-(octSlice/2-4),4),(-(octSlice/2-4),height-4),(octSlice/2-4,height-4),(octSlice/2-4,4))
 
     padFromSketch(appClass,appClass.activeDocument().Body,appClass.activeDocument().Sketch,"Pad",octSide/2,l2=octSide/2,typePad=4)
     guiClass.activeDocument().hide("Sketch")
@@ -34,7 +44,7 @@ def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octS
 
         pocketFromSketch(appClass,appClass.activeDocument().Body,appClass.activeDocument().SketchWindow,"Pocket",250,midPlane=1)
         guiClass.activeDocument().hide("SketchWindow")
-        
+
         if winType != 'pointed':
             appClass.activeDocument().Body.newObject('Sketcher::SketchObject','SketchIn')
             appClass.activeDocument().SketchIn.Support = (appClass.activeDocument().XY_Plane, [''])
@@ -72,10 +82,10 @@ def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octS
     guiClass.activeDocument().hide("SketchRoof")
     guiClass.activeDocument().hide("Pocket")
 
-def minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, width, height, roofHeight, sides, roofFactor=2, windowType=''):
+def minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, width, height, roofHeight, sides, roofFactor=2, windowType='', roofType='', roundSteps=2):
     octLongInSide = width
     octSide = octLongInSide/3**(1/2) if sides == 6 else octLongInSide/(2**(1/2)+1)
-    minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octSide, octLongInSide, height, roofHeight, roofFactor, winType=windowType)
+    minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octSide, octLongInSide, height, roofHeight, roofFactor, winType=windowType, roofType=roofType, roundSteps=roundSteps)
 
     rotation = 360 / sides
     activeDoc = appClass.ActiveDocument
@@ -86,7 +96,7 @@ def minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, wid
     if sides == 8:
         draftClass.clone(activeDoc.Body)
         draftClass.rotate([activeDoc.Clone002],3*rotation,appClass.Vector(0,0,0),axis=appClass.Vector(0.0,0.0,1.0),copy=False)
-    
+
     activeDoc.addObject("Part::MultiFuse","Fusion")
     activeDoc.Fusion.Shapes = [appClass.activeDocument().Body,appClass.activeDocument().Clone,]
     guiClass.activeDocument().Body.Visibility=False
@@ -119,7 +129,7 @@ def minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, wid
     guiClass.ActiveDocument.ActiveObject.LineColor=eval("guiClass.ActiveDocument."+thisShape).LineColor
     guiClass.ActiveDocument.ActiveObject.PointColor=eval("guiClass.ActiveDocument."+thisShape).PointColor
     appClass.ActiveDocument.recompute()
-    
+
     if sides == 8:
         activeDoc.removeObject("Fusion002")
         activeDoc.removeObject("Clone002")
@@ -133,7 +143,7 @@ def minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, wid
     activeDoc.removeObject("Body")
     activeDoc.removeObject("Clone")
     activeDoc.recompute()
-    
+
 def cuarto(appClass, guiClass, draftClass, partClass, sketcherClass, width, length, height):
     activeDoc = appClass.ActiveDocument
     activeDoc.addObject('PartDesign::Body','Body')
@@ -142,17 +152,17 @@ def cuarto(appClass, guiClass, draftClass, partClass, sketcherClass, width, leng
     activeDoc.Sketch.Support = (appClass.activeDocument().XY_Plane, [''])
     activeDoc.Sketch.MapMode = 'FlatFace'
     #appClass.ActiveDocument.recompute()
-    
+
     sketchPolygon(appClass,partClass,sketcherClass,"Sketch",0,(-width/2,-length/2),(width/2,-length/2),
                   (width/2,length/2),(-width/2,length/2))
 
     padFromSketch(appClass,activeDoc.Body,activeDoc.Sketch,"Pad",height,reversePad=False)
-    
+
     activeDoc.Body.newObject('Sketcher::SketchObject','SketchCut')
     activeDoc.SketchCut.Support = (appClass.activeDocument().XY_Plane, [''])
     activeDoc.SketchCut.MapMode = 'FlatFace'
     #appClass.ActiveDocument.recompute()
-    
+
     sketchPolygon(appClass,partClass,sketcherClass,"SketchCut",0,(-width/2,-length/2+5),(-width/2,length/2-5),
                   (-width/2+2.5,length/2-5),(-width/2+2.5,-length/2+5))
     sketchPolygon(appClass,partClass,sketcherClass,"SketchCut",4,(-width/2+5,length/2),(width/2-5,length/2),
@@ -161,15 +171,15 @@ def cuarto(appClass, guiClass, draftClass, partClass, sketcherClass, width, leng
                   (width/2-2.5,length/2-5),(width/2-2.5,-length/2+5))
     sketchPolygon(appClass,partClass,sketcherClass,"SketchCut",12,(-width/2+5,-length/2),(width/2-5,-length/2),
                   (width/2-5,-length/2+2.5),(-width/2+5,-length/2+2.5))
-    
+
     sketchPolygon(appClass,partClass,sketcherClass,"SketchCut",16,(-width/2+7.5,-length/2+7.5),(width/2-7.5,-length/2+7.5),
                   (width/2-7.5,length/2-7.5),(-width/2+7.5,length/2-7.5))
-    
+
     pocketFromSketch(appClass,appClass.activeDocument().Body,appClass.activeDocument().SketchCut,"Pocket",height-5,reversePocket=True)
     guiClass.activeDocument().hide("Pad")
     guiClass.activeDocument().hide("Sketch")
     guiClass.activeDocument().hide("SketchCut")
-    
+
     activeDoc.addObject('Part::Feature','Body').Shape=appClass.ActiveDocument.Body.Shape.removeSplitter()
     activeDoc.ActiveObject.Label=appClass.ActiveDocument.Body.Label
     guiClass.ActiveDocument.Body.hide()
@@ -180,3 +190,21 @@ def cuarto(appClass, guiClass, draftClass, partClass, sketcherClass, width, leng
     activeDoc.getObject("Body").removeObjectsFromDocument()
     activeDoc.removeObject("Body")
     activeDoc.recompute()
+
+def roundRoof(appClass, guiClass, draftClass, partClass, sketcherClass, width, height, sides):
+    minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, width, height*3/5, height*2/5, sides, roofFactor=4/3, windowType='none')
+    minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, width*3/4, height*3/5, height*4/15, sides, roofFactor=15, windowType='none')
+    draftClass.move([appClass.ActiveDocument.Objects[-1]],appClass.Vector(0,0,height*2/5),copy=False)
+
+    activeDoc = appClass.ActiveDocument
+    activeDoc.addObject("Part::MultiFuse","Fusion")
+    activeDoc.Fusion.Shapes = [appClass.activeDocument().Objects[-3],appClass.activeDocument().Objects[-2],]
+    eval("guiClass.activeDocument()."+appClass.activeDocument().Objects[-3].Name).Visibility=False
+    eval("guiClass.activeDocument()."+appClass.activeDocument().Objects[-2].Name).Visibility=False
+    #guiClass.ActiveDocument.Fusion.ShapeColor=guiClass.ActiveDocument.Body.ShapeColor
+    #guiClass.ActiveDocument.Fusion.DisplayMode=guiClass.ActiveDocument.Body.DisplayMode
+    activeDoc.recompute()
+
+    #activeDoc.removeObject(appClass.activeDocument().Objects[-3].Name)
+    #activeDoc.removeObject(appClass.activeDocument().Objects[-2].Name)
+    #activeDoc.recompute()
