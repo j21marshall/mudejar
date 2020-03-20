@@ -6,7 +6,10 @@ import mudejar_classes
 from mudejar_classes import *
 
 def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octSide, octSlice, height, roofHeight, roofFactor, winType, roofType='', roundSteps=2):
-    guiClass.activateWorkbench("DraftWorkbench")
+    #guiClass.activateWorkbench("DraftWorkbench")
+    draftClass.makeCircle(1)
+    appClass.ActiveDocument.removeObject(appClass.ActiveDocument.Objects[-1].Name)
+    
     appClass.activeDocument().addObject('PartDesign::Body','Body')
 
     appClass.activeDocument().Body.newObject('Sketcher::SketchObject','Sketch')
@@ -28,8 +31,8 @@ def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octS
     sketchPolygon(appClass,partClass,sketcherClass,"Sketch",m,(-(octSlice/2-4),4),(-(octSlice/2-4),height-4),(octSlice/2-4,height-4),(octSlice/2-4,4))
 
     padFromSketch(appClass,appClass.activeDocument().Body,appClass.activeDocument().Sketch,"Pad",octSide/2,l2=octSide/2,typePad=4)
-    guiClass.activeDocument().hide("Sketch")
-    guiClass.activeDocument().hide("Pad")
+    #guiClass.activeDocument().hide("Sketch")
+    #guiClass.activeDocument().hide("Pad")
 
     if winType != 'none':
         appClass.activeDocument().Body.newObject('Sketcher::SketchObject','SketchWindow')
@@ -43,7 +46,7 @@ def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octS
             lobedArch(appClass,partClass,sketcherClass,"SketchWindow",0,(-octSide*3/8,height/4),height*3/4,octSide*3/4)
 
         pocketFromSketch(appClass,appClass.activeDocument().Body,appClass.activeDocument().SketchWindow,"Pocket",250,midPlane=1)
-        guiClass.activeDocument().hide("SketchWindow")
+        #guiClass.activeDocument().hide("SketchWindow")
 
         if winType != 'pointed':
             appClass.activeDocument().Body.newObject('Sketcher::SketchObject','SketchIn')
@@ -55,8 +58,8 @@ def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octS
             sketchPolygon(appClass,partClass,sketcherClass,"SketchIn",4,(octSlice/2-4,-octSide/2),(octSlice/2-8,-octSide/2),(octSlice/2-8,octSide/2),(octSlice/2-4,octSide/2))
 
             padFromSketch(appClass,appClass.activeDocument().Body,appClass.activeDocument().SketchIn,"PadIn",height)
-            guiClass.activeDocument().hide("SketchIn")
-            guiClass.activeDocument().hide("PadIn")
+            #guiClass.activeDocument().hide("SketchIn")
+            #guiClass.activeDocument().hide("PadIn")
 
             appClass.activeDocument().Body.newObject('Sketcher::SketchObject','SketchInWin')
             appClass.activeDocument().SketchInWin.Support = (appClass.activeDocument().YZ_Plane, [''])
@@ -66,8 +69,8 @@ def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octS
             pointedArch(appClass,partClass,sketcherClass,"SketchInWin",0,(-octSide/8,height*3/8),height/4,octSide/4)
 
             pocketFromSketch(appClass,appClass.activeDocument().Body,appClass.activeDocument().SketchInWin,"PockInW",250,midPlane=1)
-            guiClass.activeDocument().hide("SketchInWin")
-            guiClass.activeDocument().hide("PockInW")
+            #guiClass.activeDocument().hide("SketchInWin")
+            #guiClass.activeDocument().hide("PockInW")
 
     appClass.activeDocument().Body.newObject('Sketcher::SketchObject','SketchRoof')
     appClass.activeDocument().SketchRoof.Support = (appClass.activeDocument().XY_Plane, [''])
@@ -79,8 +82,8 @@ def minareteSlice(appClass, guiClass, draftClass, partClass, sketcherClass, octS
     sketchPolygon(appClass,partClass,sketcherClass,"SketchRoof",8,(-octSide*4,-octSide*4),(-octSide*4,octSide*4),(octSide*4,octSide*4),(octSide*4,-octSide*4))
 
     pocketFromSketch(appClass,appClass.activeDocument().Body,appClass.activeDocument().SketchRoof,"PocketRoof",250,midPlane=1)
-    guiClass.activeDocument().hide("SketchRoof")
-    guiClass.activeDocument().hide("Pocket")
+    #guiClass.activeDocument().hide("SketchRoof")
+    #guiClass.activeDocument().hide("Pocket")
 
 def minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, width, height, roofHeight, sides, roofFactor=2, windowType='', roofType='', roundSteps=2):
     octLongInSide = width
@@ -90,44 +93,47 @@ def minareteRotate(appClass, guiClass, draftClass, partClass, sketcherClass, wid
     rotation = 360 / sides
     activeDoc = appClass.ActiveDocument
     draftClass.clone(activeDoc.Body)
+    activeDoc.recompute()
     draftClass.rotate([activeDoc.Clone],rotation,appClass.Vector(0,0,0),axis=appClass.Vector(0.0,0.0,1.0),copy=False)
     draftClass.clone(activeDoc.Body)
+    activeDoc.recompute()
     draftClass.rotate([activeDoc.Clone001],2*rotation,appClass.Vector(0,0,0),axis=appClass.Vector(0.0,0.0,1.0),copy=False)
     if sides == 8:
         draftClass.clone(activeDoc.Body)
+        activeDoc.recompute()
         draftClass.rotate([activeDoc.Clone002],3*rotation,appClass.Vector(0,0,0),axis=appClass.Vector(0.0,0.0,1.0),copy=False)
 
     activeDoc.addObject("Part::MultiFuse","Fusion")
     activeDoc.Fusion.Shapes = [appClass.activeDocument().Body,appClass.activeDocument().Clone,]
-    guiClass.activeDocument().Body.Visibility=False
-    guiClass.activeDocument().Clone.Visibility=False
-    guiClass.ActiveDocument.Fusion.ShapeColor=guiClass.ActiveDocument.Body.ShapeColor
-    guiClass.ActiveDocument.Fusion.DisplayMode=guiClass.ActiveDocument.Body.DisplayMode
+    #guiClass.activeDocument().Body.Visibility=False
+    #guiClass.activeDocument().Clone.Visibility=False
+    #guiClass.ActiveDocument.Fusion.ShapeColor=guiClass.ActiveDocument.Body.ShapeColor
+    #guiClass.ActiveDocument.Fusion.DisplayMode=guiClass.ActiveDocument.Body.DisplayMode
     activeDoc.recompute()
     activeDoc.addObject("Part::MultiFuse","Fusion001")
     activeDoc.Fusion001.Shapes = [appClass.activeDocument().Clone001,appClass.activeDocument().Fusion,]
-    guiClass.activeDocument().Clone001.Visibility=False
-    guiClass.activeDocument().Fusion.Visibility=False
-    guiClass.ActiveDocument.Fusion001.ShapeColor=guiClass.ActiveDocument.Clone001.ShapeColor
-    guiClass.ActiveDocument.Fusion001.DisplayMode=guiClass.ActiveDocument.Clone001.DisplayMode
+    #guiClass.activeDocument().Clone001.Visibility=False
+    #guiClass.activeDocument().Fusion.Visibility=False
+    #guiClass.ActiveDocument.Fusion001.ShapeColor=guiClass.ActiveDocument.Clone001.ShapeColor
+    #guiClass.ActiveDocument.Fusion001.DisplayMode=guiClass.ActiveDocument.Clone001.DisplayMode
     activeDoc.recompute()
     thisShape = 'Fusion001'
     if sides == 8:
         activeDoc.addObject("Part::MultiFuse","Fusion002")
         activeDoc.Fusion002.Shapes = [appClass.activeDocument().Clone002,appClass.activeDocument().Fusion001,]
-        guiClass.activeDocument().Clone002.Visibility=False
-        guiClass.activeDocument().Fusion001.Visibility=False
-        guiClass.ActiveDocument.Fusion002.ShapeColor=guiClass.ActiveDocument.Clone002.ShapeColor
-        guiClass.ActiveDocument.Fusion002.DisplayMode=guiClass.ActiveDocument.Clone002.DisplayMode
+        #guiClass.activeDocument().Clone002.Visibility=False
+        #guiClass.activeDocument().Fusion001.Visibility=False
+        #guiClass.ActiveDocument.Fusion002.ShapeColor=guiClass.ActiveDocument.Clone002.ShapeColor
+        #guiClass.ActiveDocument.Fusion002.DisplayMode=guiClass.ActiveDocument.Clone002.DisplayMode
         activeDoc.recompute()
         thisShape = 'Fusion002'
     activeDoc.addObject('Part::Feature',thisShape).Shape=eval("appClass.ActiveDocument."+thisShape).Shape.removeSplitter()
     activeDoc.ActiveObject.Label=eval("appClass.ActiveDocument."+thisShape).Label
-    eval("guiClass.ActiveDocument."+thisShape).hide()
+    #eval("guiClass.ActiveDocument."+thisShape).hide()
 
-    guiClass.ActiveDocument.ActiveObject.ShapeColor=eval("guiClass.ActiveDocument."+thisShape).ShapeColor
-    guiClass.ActiveDocument.ActiveObject.LineColor=eval("guiClass.ActiveDocument."+thisShape).LineColor
-    guiClass.ActiveDocument.ActiveObject.PointColor=eval("guiClass.ActiveDocument."+thisShape).PointColor
+    #guiClass.ActiveDocument.ActiveObject.ShapeColor=eval("guiClass.ActiveDocument."+thisShape).ShapeColor
+    #guiClass.ActiveDocument.ActiveObject.LineColor=eval("guiClass.ActiveDocument."+thisShape).LineColor
+    #guiClass.ActiveDocument.ActiveObject.PointColor=eval("guiClass.ActiveDocument."+thisShape).PointColor
     appClass.ActiveDocument.recompute()
 
     if sides == 8:
@@ -176,16 +182,16 @@ def cuarto(appClass, guiClass, draftClass, partClass, sketcherClass, width, leng
                   (width/2-7.5,length/2-7.5),(-width/2+7.5,length/2-7.5))
 
     pocketFromSketch(appClass,appClass.activeDocument().Body,appClass.activeDocument().SketchCut,"Pocket",height-5,reversePocket=True)
-    guiClass.activeDocument().hide("Pad")
-    guiClass.activeDocument().hide("Sketch")
-    guiClass.activeDocument().hide("SketchCut")
+    #guiClass.activeDocument().hide("Pad")
+    #guiClass.activeDocument().hide("Sketch")
+    #guiClass.activeDocument().hide("SketchCut")
 
     activeDoc.addObject('Part::Feature','Body').Shape=appClass.ActiveDocument.Body.Shape.removeSplitter()
     activeDoc.ActiveObject.Label=appClass.ActiveDocument.Body.Label
-    guiClass.ActiveDocument.Body.hide()
-    guiClass.ActiveDocument.ActiveObject.ShapeColor=guiClass.ActiveDocument.Body.ShapeColor
-    guiClass.ActiveDocument.ActiveObject.LineColor=guiClass.ActiveDocument.Body.LineColor
-    guiClass.ActiveDocument.ActiveObject.PointColor=guiClass.ActiveDocument.Body.PointColor
+    #guiClass.ActiveDocument.Body.hide()
+    #guiClass.ActiveDocument.ActiveObject.ShapeColor=guiClass.ActiveDocument.Body.ShapeColor
+    #guiClass.ActiveDocument.ActiveObject.LineColor=guiClass.ActiveDocument.Body.LineColor
+    #guiClass.ActiveDocument.ActiveObject.PointColor=guiClass.ActiveDocument.Body.PointColor
     #appClass.ActiveDocument.recompute()
     activeDoc.getObject("Body").removeObjectsFromDocument()
     activeDoc.removeObject("Body")
@@ -199,8 +205,8 @@ def roundRoof(appClass, guiClass, draftClass, partClass, sketcherClass, width, h
     activeDoc = appClass.ActiveDocument
     activeDoc.addObject("Part::MultiFuse","Fusion")
     activeDoc.Fusion.Shapes = [appClass.activeDocument().Objects[-3],appClass.activeDocument().Objects[-2],]
-    eval("guiClass.activeDocument()."+appClass.activeDocument().Objects[-3].Name).Visibility=False
-    eval("guiClass.activeDocument()."+appClass.activeDocument().Objects[-2].Name).Visibility=False
+    #eval("guiClass.activeDocument()."+appClass.activeDocument().Objects[-3].Name).Visibility=False
+    #eval("guiClass.activeDocument()."+appClass.activeDocument().Objects[-2].Name).Visibility=False
     #guiClass.ActiveDocument.Fusion.ShapeColor=guiClass.ActiveDocument.Body.ShapeColor
     #guiClass.ActiveDocument.Fusion.DisplayMode=guiClass.ActiveDocument.Body.DisplayMode
     activeDoc.recompute()
